@@ -62,13 +62,14 @@ Build a workspace-first application that turns a user idea into a traceable, cit
 - Editing policy posture invalidates policy checks, risks, and affected checklist items.
 
 ## Dashboard widgets
-- Current workflow state and blocked reasons
-- Architecture trade matrix
-- Phase maturity timeline
-- Review readiness by gate
-- Checklist burn-down by subsystem
-- Open risks by consequence
-- Compliance obligations due this phase
+- Dashboard must use simple text boxes only (no charts, graphs, or visual widgets).
+- Workflow status text box (current state and blocked reasons)
+- Architecture summary text box (selected baseline and top trade drivers)
+- Phase status text box (current phase and next gate)
+- Review readiness text box (gate status and missing evidence)
+- Checklist status text box (open, in-progress, and done counts by subsystem)
+- Risk summary text box (top open risks and severity)
+- Compliance summary text box (current obligations and due phase)
 
 ## Non-functional requirements
 - Every persisted plan must conform to the JSON schema.
