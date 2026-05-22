@@ -1,0 +1,118 @@
+{
+  "version": "1.0.0",
+  "initial_state": "idea_intake",
+  "states": [
+    {
+      "id": "idea_intake",
+      "name": "Idea intake",
+      "entry_conditions": ["User provides free-text idea or mission brief"],
+      "exit_conditions": ["Objectives captured", "Stakeholders captured", "Constraints initialized"],
+      "produces": ["project_profile.summary", "project_profile.objectives", "project_profile.stakeholders", "project_profile.constraints"],
+      "next": ["assumption_extraction"]
+    },
+    {
+      "id": "assumption_extraction",
+      "name": "Assumption extraction",
+      "entry_conditions": ["Initial intake complete"],
+      "exit_conditions": ["Assumptions listed", "Unknowns listed", "Confidence gaps recorded"],
+      "produces": ["project_profile.assumptions", "project_profile.unknowns"],
+      "next": ["clarification_questions"]
+    },
+    {
+      "id": "clarification_questions",
+      "name": "Clarification questions",
+      "entry_conditions": ["High-impact unknowns identified"],
+      "exit_conditions": ["Blocking questions answered or explicitly deferred", "Budget/schedule/autonomy posture clarified"],
+      "produces": ["clarification_question_set", "project_profile.constraints"],
+      "next": ["mission_class_identification"]
+    },
+    {
+      "id": "mission_class_identification",
+      "name": "Mission class identification",
+      "entry_conditions": ["Sufficient mission context exists"],
+      "exit_conditions": ["Mission class or delivery mode assigned", "Lifecycle template selected"],
+      "produces": ["mission_class", "phase_template"],
+      "next": ["conops_draft"]
+    },
+    {
+      "id": "conops_draft",
+      "name": "ConOps draft",
+      "entry_conditions": ["Mission class selected"],
+      "exit_conditions": ["Mission scenario defined", "Operational modes defined", "Success and failure conditions defined"],
+      "produces": ["concept_of_operations"],
+      "next": ["architecture_options"]
+    },
+    {
+      "id": "architecture_options",
+      "name": "Architecture options",
+      "entry_conditions": ["ConOps drafted"],
+      "exit_conditions": ["2 to 4 candidate architectures created", "Drivers and interface implications captured"],
+      "produces": ["architectures"],
+      "next": ["trade_study"]
+    },
+    {
+      "id": "trade_study",
+      "name": "Trade study and baseline selection",
+      "entry_conditions": ["Architecture options available"],
+      "exit_conditions": ["Baseline selected", "Selection rationale documented", "Rejected options explained"],
+      "produces": ["architectures[].selected", "architectures[].rationale"],
+      "next": ["requirements_tree"]
+    },
+    {
+      "id": "requirements_tree",
+      "name": "Requirements tree creation",
+      "entry_conditions": ["Baseline architecture selected", "ConOps approved for planning"],
+      "exit_conditions": ["Mission/system/subsystem/interface requirements drafted", "Top-level requirements trace to objectives and ConOps", "Verification map initialized"],
+      "produces": ["requirements"],
+      "next": ["wbs_decomposition"]
+    },
+    {
+      "id": "wbs_decomposition",
+      "name": "WBS and subsystem decomposition",
+      "entry_conditions": ["Requirements tree exists"],
+      "exit_conditions": ["Product-oriented WBS complete", "Subsystem library assigned", "Key interfaces identified"],
+      "produces": ["wbs", "subsystems"],
+      "next": ["phase_plan_generation"]
+    },
+    {
+      "id": "phase_plan_generation",
+      "name": "Phase-plan generation",
+      "entry_conditions": ["WBS complete"],
+      "exit_conditions": ["Lifecycle phases defined", "Phase entry and exit criteria defined", "Core deliverables mapped by phase"],
+      "produces": ["phases"],
+      "next": ["review_mapping"]
+    },
+    {
+      "id": "review_mapping",
+      "name": "Review and evidence mapping",
+      "entry_conditions": ["Phase plan complete"],
+      "exit_conditions": ["SRR through ORR/closeout gates defined", "Required evidence mapped to each gate"],
+      "produces": ["reviews", "requirements.verification_map"],
+      "next": ["checklist_generation"]
+    },
+    {
+      "id": "checklist_generation",
+      "name": "Checklist generation",
+      "entry_conditions": ["Review gates and subsystem decomposition complete"],
+      "exit_conditions": ["Checklist items exist for each active phase and subsystem", "Each checklist item has owner, evidence, dependencies, and exit criteria"],
+      "produces": ["checklists"],
+      "next": ["risk_cost_policy_pass"]
+    },
+    {
+      "id": "risk_cost_policy_pass",
+      "name": "Risk, cost-driver, and policy pass",
+      "entry_conditions": ["Checklist draft complete"],
+      "exit_conditions": ["Risks logged", "Primary cost drivers recorded", "Policy obligations translated to executable checks"],
+      "produces": ["risks", "cost_drivers", "policy_and_compliance"],
+      "next": ["export_bundle"]
+    },
+    {
+      "id": "export_bundle",
+      "name": "Export JSON, dashboard, and task bundle",
+      "entry_conditions": ["Plan package complete and cited"],
+      "exit_conditions": ["Schema-valid JSON exported", "Dashboard payload assembled", "Task bundle prepared"],
+      "produces": ["project_plan_json", "dashboard_payload", "task_bundle"],
+      "next": []
+    }
+  ]
+}

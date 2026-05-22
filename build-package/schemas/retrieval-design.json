@@ -1,0 +1,113 @@
+{
+  "version": "1.0.0",
+  "chunking": {
+    "strategy": "section-aware",
+    "target_tokens": 700,
+    "overlap_tokens": 120,
+    "preserve_headings": true,
+    "citation_granularity": "section"
+  },
+  "metadata": {
+    "required_tags": [
+      "doc_type",
+      "phase",
+      "subsystem",
+      "discipline",
+      "policy_type",
+      "review_gate",
+      "mission_class"
+    ],
+    "optional_tags": [
+      "source_version",
+      "publication_date",
+      "authority",
+      "jurisdiction",
+      "environment",
+      "program_type"
+    ]
+  },
+  "corpus": [
+    {
+      "id": "nasa-seh",
+      "title": "NASA Systems Engineering Handbook",
+      "doc_type": "handbook",
+      "authority": "NASA",
+      "source_url": "https://www.nasa.gov/reference/systems-engineering-handbook/"
+    },
+    {
+      "id": "nasa-phase-a",
+      "title": "NASA Project Phase A: Concept and Technology Development",
+      "doc_type": "lifecycle-reference",
+      "authority": "NASA",
+      "source_url": "https://www.nasa.gov/reference/3-4-project-phase-a-concept-and-technology-development/"
+    },
+    {
+      "id": "nasa-review-appendix",
+      "title": "NASA Systems Engineering Handbook Appendix",
+      "doc_type": "review-reference",
+      "authority": "NASA",
+      "source_url": "https://www.nasa.gov/reference/system-engineering-handbook-appendix/"
+    },
+    {
+      "id": "nasa-wbs",
+      "title": "NASA Work Breakdown Structure Handbook",
+      "doc_type": "wbs-guidance",
+      "authority": "NASA",
+      "source_url": "https://ntrs.nasa.gov/citations/20200000300"
+    },
+    {
+      "id": "artemis-accords",
+      "title": "Artemis Accords overview",
+      "doc_type": "policy",
+      "authority": "NASA",
+      "source_url": "https://www.nasa.gov/artemis-accords/"
+    },
+    {
+      "id": "launch-services-infobook",
+      "title": "Launch Services Program infobook",
+      "doc_type": "launch-reference",
+      "authority": "NASA",
+      "source_url": "https://tdglobal.ksc.nasa.gov/servlet/sm.web.Fetch/LSP_InfoBook_2025-04-30.pdf?did=49659&rhid=1003&type=released"
+    },
+    {
+      "id": "radiation-parts-guidance",
+      "title": "Radiation and Parts Selection Guidance",
+      "doc_type": "radiation-guidance",
+      "authority": "NASA",
+      "source_url": "https://www.nasa.gov/wp-content/uploads/2024/11/2024-learn-forum-11-radiation-and-parts-selection.pdf?emrc=49f56e"
+    },
+    {
+      "id": "mbse-handbook",
+      "title": "NASA System Modeling Handbook",
+      "doc_type": "mbse-guidance",
+      "authority": "NASA",
+      "source_url": "https://standards.nasa.gov/system/files/tmp/2025-03-12-NASA-HDBK-1009A.pdf"
+    }
+  ],
+  "retrieval_profiles": [
+    {
+      "name": "phase_checklist",
+      "filters": ["phase", "review_gate", "subsystem"],
+      "top_k": 8,
+      "rerank": true
+    },
+    {
+      "name": "policy_pass",
+      "filters": ["policy_type", "jurisdiction", "mission_class"],
+      "top_k": 6,
+      "rerank": true
+    },
+    {
+      "name": "radiation_assurance",
+      "filters": ["discipline", "subsystem", "mission_class"],
+      "top_k": 6,
+      "rerank": true
+    }
+  ],
+  "citation_policy": {
+    "require_source_refs_per_decision": true,
+    "require_source_refs_per_checklist_item": true,
+    "minimum_sources_for_policy_claim": 1,
+    "minimum_sources_for_architecture_trade": 2
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "intake": {
+    "role": "Idea intake agent",
+    "prompt": "Extract the idea, mission or business objective, stakeholders, constraints, assumptions, unknowns, success metrics, and mission class cues. Return only structured fields and confidence notes."
+  },
+  "clarification": {
+    "role": "Clarification agent",
+    "prompt": "Ask only the smallest set of missing high-impact questions needed to make architecture and lifecycle planning credible. Prioritize destination, payload, schedule, budget band, autonomy level, jurisdiction, and regulatory posture."
+  },
+  "conops": {
+    "role": "ConOps agent",
+    "prompt": "Draft the concept of operations with mission scenario, operational modes, environment, success criteria, failure conditions, key interfaces, and nominal/off-nominal flows. Tie each section back to objectives and constraints."
+  },
+  "architecture": {
+    "role": "Architecture agent",
+    "prompt": "Generate 2 to 4 candidate system architectures, identify pros, cons, design drivers, interface implications, and mission fit, then nominate a baseline only after comparing options."
+  },
+  "trade_study": {
+    "role": "Trade study agent",
+    "prompt": "Score candidate architectures against weighted criteria such as mission performance, schedule, cost, risk, technology maturity, autonomy, and policy fit. Record rationale, uncertainties, and the selected baseline."
+  },
+  "requirements": {
+    "role": "Requirements derivation agent",
+    "prompt": "Derive mission, system, subsystem, and interface requirements from objectives and ConOps. Every requirement must be testable, traceable, and mapped to a verification method and review gate."
+  },
+  "subsystems": {
+    "role": "Subsystem decomposition agent",
+    "prompt": "Decompose the baseline into a product-oriented WBS covering payload, structures, thermal, EPS, C&DH, avionics, communications, GNC, software, AIT, ground segment, mission ops, safety, quality, legal, and disposal. For each subsystem capture drivers, interfaces, artifacts, and verification hooks."
+  },
+  "risk": {
+    "role": "Risk and mitigation agent",
+    "prompt": "Identify technical, schedule, cost, safety, supply-chain, radiation, and policy risks. Assign likelihood, consequence, mitigation, owner role, trigger, and closure evidence."
+  },
+  "compliance": {
+    "role": "Compliance agent",
+    "prompt": "Translate lifecycle, policy, debris, spectrum, licensing, registration, and interoperability obligations into executable checklist items with review gates, evidence artifacts, and source references."
+  },
+  "checklists": {
+    "role": "Checklist synthesis agent",
+    "prompt": "Generate actionable checklist items by phase and subsystem. Every item must include id, phase, subsystem, task, purpose, inputs, dependencies, owner_role, evidence_artifact, exit_criteria, review_gate, risk_if_skipped, and source_refs."
+  }
+}
