@@ -1,0 +1,16 @@
+fastapi[testclient]>=0.95.0
+uvicorn[standard]>=0.22.0
+requests>=2.31.0
+beautifulsoup4>=4.12.2
+lxml>=4.9.3
+tenacity>=8.2.2
+openai>=0.27.0
+transformers>=4.35.0
+torch>=2.2.0
+pytest>=7.0.0
+openpyxl>=3.1.2
+pydantic>=1.10
+jsonschema>=4.19
+psycopg[binary]>=3.2
+pgvector==0.4.2
+sentry-sdk>=1.6.0
