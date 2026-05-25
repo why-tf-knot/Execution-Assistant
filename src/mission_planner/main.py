@@ -31,12 +31,14 @@ from mission_planner.vector_store import VectorStore
 from mission_planner.vector_store_pg import PGVectorStore
 from pathlib import Path
 import os
+from fastapi import Query
 from mission_planner.middleware import (
     SimpleRateLimiterMiddleware,
     APIKeyAuthMiddleware,
     RequestLoggingMiddleware,
     init_sentry_if_configured,
 )
+from mission_planner.job_queue import JobQueue
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -44,6 +46,11 @@ DATA_DIR = ROOT / "build-package" / "db" / "projects"
 EXPORT_DIR = ROOT / "build-package" / "exports"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+JOB_QUEUE = JobQueue(ROOT)
+
+SCHEMA_VERSION = "1.1.0"
+WORKFLOW_VERSION = "1.0.0"
+PROMPT_VERSION = os.environ.get("PROMPT_VERSION", "2026-05-25")
 
 app = FastAPI(title="Mission Planning Engine - Sprint 1")
 
@@ -90,6 +97,15 @@ def _save_project(project_id: str, payload: dict, version: int = 1):
     with file.open("w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
     return str(file)
+
+
+def _record_metadata(status: str) -> dict:
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "workflow_version": WORKFLOW_VERSION,
+        "prompt_version": PROMPT_VERSION,
+        "status": status,
+    }
 
 
 def _load_latest(project_id: str):
@@ -141,7 +157,7 @@ def create_project(payload: dict):
         "id": project_id,
         "version": 1,
         "project_profile": project_profile,
-        "status": "ingested",
+        "metadata": _record_metadata("ingested"),
     }
 
     path = _save_project(project_id, record, version=1)
@@ -149,10 +165,19 @@ def create_project(payload: dict):
 
 
 @app.post("/api/projects/{project_id}/generate-plan")
-def generate_plan(project_id: str, payload: dict):
+def generate_plan(project_id: str, payload: dict, async_job: bool = Query(False, description="If true, queue the plan generation as a background job")):
     state = _load_latest(project_id)
     if state is None:
         raise HTTPException(status_code=404, detail="Project not found")
+
+    if async_job:
+        job = JOB_QUEUE.submit(
+            kind="generate-plan",
+            payload={"project_id": project_id, "payload": payload},
+            project_id=project_id,
+            handler=lambda: json.loads(generate_plan(project_id, payload, async_job=False).body.decode("utf-8")),
+        )
+        return JSONResponse(status_code=202, content={"job_id": job["id"], "status": job["status"], "status_url": f"/api/jobs/{job['id']}"})
 
     clarification = payload.get("clarification_answers", {})
     profile = state["project_profile"]
@@ -258,7 +283,13 @@ def generate_plan(project_id: str, payload: dict):
 
     # persist new version
     version = state.get("version", 1) + 1
-    record = {"id": project_id, "version": version, "project_profile": plan["project_profile"], "plan": plan, "status": "plan_generated"}
+    record = {
+        "id": project_id,
+        "version": version,
+        "project_profile": plan["project_profile"],
+        "plan": plan,
+        "metadata": _record_metadata("plan_generated"),
+    }
     _save_project(project_id, record, version=version)
     return JSONResponse(plan)
 
@@ -288,8 +319,7 @@ def get_project_plan(project_id: str):
     return state.get("plan") or state
 
 
-@app.post("/api/projects/{project_id}/generate-checklists")
-def generate_checklists(project_id: str):
+def _run_checklist_generation(project_id: str) -> dict:
     state = _load_latest(project_id)
     if state is None:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -310,9 +340,29 @@ def generate_checklists(project_id: str):
     plan["checklists"] = items
 
     version = state.get("version", 1) + 1
-    record = {"id": project_id, "version": version, "project_profile": plan.get("project_profile"), "plan": plan, "status": "checklists_generated"}
+    record = {
+        "id": project_id,
+        "version": version,
+        "project_profile": plan.get("project_profile"),
+        "plan": plan,
+        "metadata": _record_metadata("checklists_generated"),
+    }
     _save_project(project_id, record, version=version)
-    return {"checklists": items}
+    return {"checklists": items, "project_id": project_id, "version": version}
+
+
+@app.post("/api/projects/{project_id}/generate-checklists")
+def generate_checklists(project_id: str, async_job: bool = Query(False, description="If true, queue the regeneration as a background job")):
+    if async_job:
+        job = JOB_QUEUE.submit(
+            kind="generate-checklists",
+            payload={"project_id": project_id},
+            project_id=project_id,
+            handler=lambda: _run_checklist_generation(project_id),
+        )
+        return JSONResponse(status_code=202, content={"job_id": job["id"], "status": job["status"], "status_url": f"/api/jobs/{job['id']}"})
+    result = _run_checklist_generation(project_id)
+    return {"checklists": result["checklists"]}
 
 
 @app.get("/api/retrieve")
@@ -714,7 +764,13 @@ def derive_requirements(project_id: str):
     plan["requirements"] = reqs
     plan["checklists"] = checklist_generator.generate_checklists(profile, plan.get("concept_of_operations") or {}, reqs, plan.get("subsystems", []))
     version = state.get("version", 1) + 1
-    record = {"id": project_id, "version": version, "project_profile": plan.get("project_profile"), "plan": plan, "status": "requirements_derived"}
+    record = {
+        "id": project_id,
+        "version": version,
+        "project_profile": plan.get("project_profile"),
+        "plan": plan,
+        "metadata": _record_metadata("requirements_derived"),
+    }
     _save_project(project_id, record, version=version)
     return reqs
 
@@ -736,9 +792,23 @@ def derive_requirements_llm(project_id: str):
     plan["requirements"] = reqs
     plan["checklists"] = checklist_generator.generate_checklists(profile, plan.get("concept_of_operations") or {}, reqs, plan.get("subsystems", []))
     version = state.get("version", 1) + 1
-    record = {"id": project_id, "version": version, "project_profile": plan.get("project_profile"), "plan": plan, "status": "requirements_derived_llm"}
+    record = {
+        "id": project_id,
+        "version": version,
+        "project_profile": plan.get("project_profile"),
+        "plan": plan,
+        "metadata": _record_metadata("requirements_derived_llm"),
+    }
     _save_project(project_id, record, version=version)
     return reqs
+
+
+@app.get("/api/jobs/{job_id}")
+def get_job(job_id: str):
+    job = JOB_QUEUE.load(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
 
 
 @app.post("/api/ingest-chunk")
